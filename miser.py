@@ -55,7 +55,7 @@ def main():
 
     songs_list = parse_csv(args.link)
 
-    pool.map(download_song, [song for song in songs_list])
+    pool.map(download_song, songs_list)
 
 def download_song(song):
     """Download a single song in a playlist"""
