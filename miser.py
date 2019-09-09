@@ -20,7 +20,10 @@ opts = {
         'preferredquality': '192',
     }],
 }
+
+# Vars in global scope
 ydl = youtube_dl.YoutubeDL(opts)
+pool = mp.Pool()
 
 def main():
     """Main"""
@@ -50,14 +53,14 @@ def main():
         args.directory = os.getcwd()
     os.chdir(args.directory)
 
-    #download_song(ydl)
-    parse_csv(args.link)
+    songs_list = parse_csv(args.link)
 
-def download_songs(song_list):
-    """Download all songs in a playlist"""
-    for song in song_list:
-        ydl.download([song])
-        print("Finished downloading and converting: " + song)
+    pool.map(download_song, [song for song in songs_list])
+
+def download_song(song):
+    """Download a single song in a playlist"""
+    ydl.download([song])
+    print("Finished downloading and converting: " + song)
 
 #def get_csv():
     #"""Download converted playlist CSV file"""
@@ -78,12 +81,12 @@ def parse_csv(csv_path):
             for row in reader:
                 song_list.append(row[2] + " - " + row[1])
             # todo: parse CSV, then check to see which songs already exist in current dir
-            # move non-existent results to new list
+            # move non-existent results to new list and return that
     except IndexError as error:
         # consider validating playlists when parsing
         # from API on web server instead
         print(str(error))
-
-    download_songs(song_list)
+    
+    return song_list
 
 main()
