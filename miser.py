@@ -5,34 +5,26 @@
 
 import os
 import csv
+import requests
+import time
+#import eyed3 as eyed3
 import argparse
 from argparse import RawTextHelpFormatter
 import multiprocessing as mp
 import youtube_dl
 
-opts = {
-    'format': 'bestaudio/best',
-    'ignoreerrors': True,
-    'default_search': 'ytsearch',
-    'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',
-        'preferredquality': '192',
-    }],
-}
-
 # Vars in global scope
-ydl = youtube_dl.YoutubeDL(opts)
 pool = mp.Pool()
 
 def main():
     """Main"""
     parser = argparse.ArgumentParser(
-        description="MelodyMiser -- Download a complete Spotify playlist from YouTube",
+        description="MelodyMiser -- Download a song/complete Spotify playlist from YouTube",
         formatter_class=RawTextHelpFormatter,
-        epilog="Examples:\n"
-        "test1"
-        "test2"
+        epilog="Example:\n"
+        "miser -l <spotify-playlist-link> "
+        "-j 3 -d /home/user/music\n"
+        "miser -l 'ESPRIT 空想 - Trip II The OC' -d ."
     )
     parser.add_argument('-l', '--link', required=True,
                         help="Specifies the link to the public Spotify playlist "
@@ -57,9 +49,29 @@ def main():
 
     pool.map(download_song, songs_list)
 
+    #pool.map(construct_metadata, songs_list)
+
 def download_song(song):
     """Download a single song in a playlist"""
-    ydl.download([song])
+    #artist = str(song.split(" -"))
+    #song_name = str(song.split("- "))
+
+    opts = {
+    'format': 'bestaudio/best',
+    'ignoreerrors': True,
+    'quiet': False,
+    'default_search': 'ytsearch',
+    #'outtmpl': '%(title)s.%(ext)s',
+    #'outtmpl': artist + " " + song_name + '.%(ext)s',
+    'postprocessors': [{
+        'key': 'FFmpegExtractAudio',
+        'preferredcodec': 'mp3',
+        'preferredquality': '192',
+    }],
+    }
+
+    ydl = youtube_dl.YoutubeDL(opts).download(song)
+
     print("Finished downloading and converting: " + song)
 
 #def get_csv():
@@ -67,7 +79,13 @@ def download_song(song):
 
 def construct_metadata(song):
     """Construct ID3 metadata for a single song"""
-    print(song) #temp
+    to_tag = eyed3.load("TEST")
+
+    print("Retrieving ID3 metadata for " + song)
+
+
+    # wait 1 second to avoid MusicBrainz rate-limiting
+    time.sleep(1)
 
 def parse_csv(csv_path):
     """Parse downloaded csv file"""
